@@ -1,0 +1,74 @@
+{
+  "class_names": [
+    "biodegradable",
+    "non_biodegradable"
+  ],
+  "class_indices": {
+    "biodegradable": 0,
+    "non_biodegradable": 1
+  },
+  "img_size": [
+    224,
+    224
+  ],
+  "metadata": {
+    "biodegradable": {
+      "display": "Biodegradable Waste",
+      "biodegradable": true,
+      "category": "Organic / Natural Waste",
+      "health_risk": "Low",
+      "severity": "Green",
+      "score": 2,
+      "decompose_time": "Weeks to months",
+      "disposal": "Place in wet/green waste bin. Ideal for composting at home.",
+      "fun_fact": "Biodegradable waste can be converted into compost that enriches soil and reduces the need for chemical fertilizers.",
+      "upcycling": [
+        {
+          "title": "\ud83c\udf0d Home Compost",
+          "desc": "Layer with dry leaves and soil to make rich garden compost."
+        },
+        {
+          "title": "\ud83c\udf31 Seed Starter",
+          "desc": "Use cardboard/paper pieces as biodegradable seed starter pots."
+        },
+        {
+          "title": "\ud83c\udf75 Vegetable Stock",
+          "desc": "Boil vegetable peels with spices for free cooking stock."
+        },
+        {
+          "title": "\ud83c\udf3b Plant Fertilizer",
+          "desc": "Bury fruit peels near plants for a natural nutrient boost."
+        }
+      ]
+    },
+    "non_biodegradable": {
+      "display": "Non-Biodegradable Waste",
+      "biodegradable": false,
+      "category": "Plastic / Metal / Synthetic Waste",
+      "health_risk": "High",
+      "severity": "Red",
+      "score": 8,
+      "decompose_time": "100 \u2013 1000+ years",
+      "disposal": "Separate by material (plastic/glass/metal). Place in dry recycling bin. Never burn.",
+      "fun_fact": "Only 9% of all plastic ever produced has been recycled. The rest ends up in landfills or oceans.",
+      "upcycling": [
+        {
+          "title": "\ud83c\udf3f Bottle Planter",
+          "desc": "Cut plastic bottles in half and use as planters for small herbs."
+        },
+        {
+          "title": "\ud83d\udc26 Bird Feeder",
+          "desc": "Cut holes in a plastic bottle, add a perch and fill with birdseed."
+        },
+        {
+          "title": "\ud83d\udd6f\ufe0f Tin Lantern",
+          "desc": "Punch patterns into tin cans and place a tealight inside."
+        },
+        {
+          "title": "\ud83c\udfa8 Upcycled Art",
+          "desc": "Use bottle caps, wrappers and cans to create mosaic wall art."
+        }
+      ]
+    }
+  }
+}

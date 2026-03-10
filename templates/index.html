@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WasteWise — AI Waste Classifier</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo">
+                <div class="logo-icon">♻</div>
+                <div>
+                    <div class="logo-title">WasteWise</div>
+                    <div class="logo-sub">Local AI · No Internet Required</div>
+                </div>
+            </div>
+            <div class="header-badges">
+                <span class="badge badge-local" id="model-badge">⏳ Loading model...</span>
+                <span class="badge badge-eco">🌍 8 Classes</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Model Missing Warning -->
+    <div id="model-warning" class="model-warning hidden">
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-text">
+            <strong>Model not trained yet.</strong>
+            Run <code>python model_training/train.py --data_dir "path/to/dataset"</code> first,
+            then restart the app.
+        </div>
+    </div>
+
+    <main class="main">
+        <!-- LEFT PANEL -->
+        <div class="panel panel-left">
+            <div class="panel-label">IDENTIFY WASTE</div>
+
+            <div class="mode-tabs">
+                <button class="tab-btn active" data-mode="upload" onclick="switchMode('upload')">📁 Upload</button>
+                <button class="tab-btn" data-mode="camera" onclick="switchMode('camera')">📸 Camera</button>
+                <button class="tab-btn" data-mode="url" onclick="switchMode('url')">🔗 URL</button>
+            </div>
+
+            <!-- Upload -->
+            <div id="upload-mode" class="input-section active">
+                <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()"
+                     ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                    <div class="dropzone-inner" id="dropzone-inner">
+                        <div class="dropzone-icon">📤</div>
+                        <div class="dropzone-text">Drop image here or click to browse</div>
+                        <div class="dropzone-sub">JPG · PNG · WEBP · GIF</div>
+                    </div>
+                    <img id="preview-img" class="preview-img hidden" alt="Preview">
+                </div>
+                <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
+            </div>
+
+            <!-- Camera -->
+            <div id="camera-mode" class="input-section hidden">
+                <div class="camera-container">
+                    <video id="camera-feed" autoplay playsinline class="camera-feed hidden"></video>
+                    <canvas id="camera-canvas" class="hidden"></canvas>
+                    <img id="camera-snap" class="camera-snap hidden" alt="Captured">
+                    <div id="camera-placeholder" class="camera-placeholder">
+                        <div class="camera-icon">📷</div>
+                        <div class="camera-text">Click "Start Camera" to begin</div>
+                    </div>
+                </div>
+                <div class="camera-controls">
+                    <button class="btn-cam" id="start-cam-btn" onclick="startCamera()">▶ Start Camera</button>
+                    <button class="btn-cam btn-snap hidden" id="snap-btn" onclick="snapPhoto()">📸 Capture</button>
+                    <button class="btn-cam btn-retake hidden" id="retake-btn" onclick="retakePhoto()">🔄 Retake</button>
+                    <button class="btn-cam btn-stop hidden" id="stop-cam-btn" onclick="stopCamera()">⏹ Stop</button>
+                </div>
+            </div>
+
+            <!-- URL -->
+            <div id="url-mode" class="input-section hidden">
+                <div class="url-input-wrap">
+                    <input type="text" id="image-url-input" class="url-input" placeholder="Paste image URL...">
+                    <button class="btn-load-url" onclick="loadFromURL()">Load</button>
+                </div>
+                <img id="url-preview-img" class="preview-img hidden" alt="URL Preview">
+            </div>
+
+            <!-- Classify -->
+            <button class="classify-btn" id="classify-btn" onclick="classifyWaste()" disabled>
+                <span class="classify-btn-icon">🔍</span>
+                <span id="classify-btn-text">Classify Waste</span>
+            </button>
+
+            <!-- Classes legend -->
+            <div class="classes-legend">
+                <div class="quick-label">Detectable Classes</div>
+                <div class="class-chips">
+                    <span class="class-chip bio">🍎 Food Waste</span>
+                    <span class="class-chip bio">🍂 Leaf Waste</span>
+                    <span class="class-chip bio">📰 Paper</span>
+                    <span class="class-chip bio">🪵 Wood</span>
+                    <span class="class-chip nonbio">🥤 Plastic Bottles</span>
+                    <span class="class-chip nonbio">🛍️ Plastic Bags</span>
+                    <span class="class-chip nonbio">🥫 Metal</span>
+                    <span class="class-chip nonbio danger">📱 E-Waste</span>
+                </div>
+                <div class="legend-row">
+                    <span class="legend-dot bio"></span><span>Biodegradable</span>
+                    <span class="legend-dot nonbio" style="margin-left:12px"></span><span>Non-Biodegradable</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="panel panel-right">
+
+            <!-- Default -->
+            <div id="default-state" class="default-state">
+                <div class="default-icon">🌿</div>
+                <div class="default-title">Ready to Classify</div>
+                <div class="default-sub">Upload an image, point your camera, or paste a URL to identify waste and get instant eco-insights — 100% offline, no API key.</div>
+                <div class="feature-chips">
+                    <span class="feat-chip">✅ Biodegradable Detection</span>
+                    <span class="feat-chip">♻️ Upcycling Ideas</span>
+                    <span class="feat-chip">📊 Risk Score</span>
+                    <span class="feat-chip">📸 Live Camera</span>
+                    <span class="feat-chip">🔒 100% Offline</span>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading-state" class="loading-state hidden">
+                <div class="loading-animation">
+                    <div class="loading-ring"></div>
+                    <div class="loading-icon">🤖</div>
+                </div>
+                <div class="loading-title">Analyzing Image...</div>
+                <div class="loading-steps">
+                    <div class="step active" id="step-1">🔍 Preprocessing image...</div>
+                    <div class="step" id="step-2">🧠 Running neural network...</div>
+                    <div class="step" id="step-3">♻️ Generating eco-insights...</div>
+                </div>
+            </div>
+
+            <!-- Result -->
+            <div id="result-state" class="hidden">
+                <div class="result-header">
+                    <div class="panel-label">CLASSIFICATION RESULT</div>
+                </div>
+
+                <div class="risk-bar-wrap">
+                    <div class="risk-bar">
+                        <div class="risk-pointer" id="risk-pointer"></div>
+                    </div>
+                    <div class="risk-labels">
+                        <span>Low Risk</span><span>Medium</span><span>High Risk</span>
+                    </div>
+                </div>
+
+                <div class="score-zone">
+                    <div class="score-circle" id="score-circle">
+                        <div class="score-num" id="score-num">0</div>
+                        <div class="score-den">/10</div>
+                    </div>
+                    <div class="zone-info">
+                        <div class="zone-label" id="zone-label">—</div>
+                        <div class="zone-desc" id="zone-desc">—</div>
+                    </div>
+                </div>
+
+                <div class="result-tags" id="result-tags"></div>
+
+                <!-- Confidence bar -->
+                <div class="confidence-section">
+                    <div class="conf-label-row">
+                        <span class="conf-label">Model Confidence</span>
+                        <span class="conf-value" id="conf-value">—</span>
+                    </div>
+                    <div class="conf-bar">
+                        <div class="conf-fill" id="conf-fill"></div>
+                    </div>
+                    <div class="top3-section" id="top3-section"></div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <div class="metric-label">CATEGORY</div>
+                        <div class="metric-value" id="metric-category">—</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">HEALTH RISK</div>
+                        <div class="metric-value" id="metric-risk">—</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">SEVERITY</div>
+                        <div class="metric-value" id="metric-severity">—</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">DECOMPOSE TIME</div>
+                        <div class="metric-value" id="metric-decompose">—</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">BIODEGRADABLE</div>
+                        <div class="metric-value" id="metric-bio">—</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">CONFIDENCE</div>
+                        <div class="metric-value" id="metric-confidence">—</div>
+                    </div>
+                </div>
+
+                <div class="fun-fact" id="fun-fact-box">
+                    <span class="fun-fact-icon">💡</span>
+                    <span id="fun-fact-text">—</span>
+                </div>
+
+                <div class="disposal-box">
+                    <div class="disposal-title">🗑️ Proper Disposal</div>
+                    <div class="disposal-text" id="disposal-text">—</div>
+                </div>
+
+                <div class="upcycling-section">
+                    <div class="upcycle-header">
+                        <span>♻️</span>
+                        <span class="upcycle-title">UPCYCLING IDEAS</span>
+                    </div>
+                    <div class="upcycle-grid" id="upcycle-grid"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <span>WasteWise · Local MobileNetV2 Model · 8 Waste Classes</span>
+        <span class="footer-dot">·</span>
+        <span>100% Offline 🔒 No API Key Needed 🌍</span>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
